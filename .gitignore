@@ -1,0 +1,23 @@
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# node / frontend build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# pyinstaller
+build/
+dist/
+*.spec
+
+# runtime data: calibration, saved measurements, logs
+data/
+measurements/
+*.log
+
+# os
+.DS_Store
