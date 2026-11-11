@@ -1,0 +1,65 @@
+{
+  "name": "pico-impedance-analyzer-desktop",
+  "productName": "PicoScope Impedance Analyzer",
+  "version": "1.1.0",
+  "description": "Frequency and impedance analyzer for the PicoScope 2204A",
+  "main": "main.js",
+  "author": "Luca Ricci",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac dmg zip"
+  },
+  "devDependencies": {
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.lucaricci.picoimpedance",
+    "productName": "PicoScope Impedance Analyzer",
+    "copyright": "Copyright © 2026 Luca Ricci",
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend-dist/pico-backend",
+        "to": "backend/pico-backend"
+      }
+    ],
+    "afterPack": "after-pack.js",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64"]
+        }
+      ]
+    },
+    "dmg": {
+      "artifactName": "${productName} ${version} ${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName} Setup ${version}.${ext}"
+    }
+  }
+}

@@ -42,7 +42,35 @@ def main() -> int:
     import uvicorn
     from backend.main import app
 
-    threading.Timer(1.2, lambda: webbrowser.open(url)).start()
+    # If the shell that launched us dies without running its shutdown hook, this
+    # process would keep the port and the (exclusive) scope driver forever.
+    if os.environ.get("PARENT_PID") and os.name != "nt":
+        parent = int(os.environ["PARENT_PID"])
+
+        def watch_parent():
+            while True:
+                if os.getppid() != parent:
+                    os._exit(0)
+                time.sleep(2.0)
+
+        threading.Thread(target=watch_parent, daemon=True).start()
+
+        # the ppid poll can miss (reparenting quirks); a closed stdin pipe cannot:
+        # the shell holds the write end, so EOF means the shell is gone
+        def watch_stdin():
+            try:
+                while sys.stdin.buffer.read(1):
+                    pass
+            except Exception:
+                pass
+            os._exit(0)
+
+        threading.Thread(target=watch_stdin, daemon=True).start()
+
+    # the Electron shell supplies its own window; only the standalone build
+    # should reach for the system browser
+    if not os.environ.get("APP_NO_BROWSER"):
+        threading.Timer(1.2, lambda: webbrowser.open(url)).start()
     print("PicoScope Impedance Analyzer")
     print("  %s" % url)
     print("  data: %s" % data, flush=True)

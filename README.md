@@ -31,14 +31,21 @@ Three consequences worth knowing:
 
 ## Download
 
-A packaged macOS build is attached to the [latest release](https://github.com/lucaricciatl/pico-impedance-analyzer/releases/latest):
+Packaged macOS builds are attached to the [latest release](https://github.com/lucaricciatl/pico-impedance-analyzer/releases/latest):
 
-- `PicoScope-Impedance-Analyzer-1.0.0-macos-arm64.dmg` (or `.zip`)
-- Drag the app to Applications, then **right-click → Open** the first time — the build is
-  ad-hoc signed but not notarised, so Gatekeeper blocks a plain double-click once.
-- The app starts its own server on a free localhost port and opens the UI. No terminal.
+| build | what it is |
+|---|---|
+| `PicoScope-Impedance-Analyzer-1.1.0-macos-arm64.dmg` | **desktop app** — Electron window, starts its own server, ~113 MB |
+| `PicoScope-Impedance-Analyzer-1.1.0-macos-arm64.zip` | same app, zipped |
+| `…1.0.0-macos-arm64.dmg` | older standalone build: frozen Python + opens your browser, 24 MB |
 
-Rebuild it yourself with `packaging/build_macos.sh` (writes `release/`).
+First launch of either: **right-click → Open**, or
+`xattr -dr com.apple.quarantine "/Applications/PicoScope Impedance Analyzer.app"` —
+both are ad-hoc signed but not notarised (no Apple Developer ID), so Gatekeeper blocks
+a plain double-click once.
+
+Rebuild with `packaging/build_desktop.sh` (Electron) or `packaging/build_macos.sh`
+(standalone). Both write into `release/`.
 
 ## Run
 
