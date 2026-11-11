@@ -29,6 +29,17 @@ Three consequences worth knowing:
 - Nothing depends on trigger stability. Each capture is analysed on its own, and complex
   Z is averaged across repeats.
 
+## Download
+
+A packaged macOS build is attached to the [latest release](https://github.com/lucaricciatl/pico-impedance-analyzer/releases/latest):
+
+- `PicoScope-Impedance-Analyzer-1.0.0-macos-arm64.dmg` (or `.zip`)
+- Drag the app to Applications, then **right-click → Open** the first time — the build is
+  ad-hoc signed but not notarised, so Gatekeeper blocks a plain double-click once.
+- The app starts its own server on a free localhost port and opens the UI. No terminal.
+
+Rebuild it yourself with `packaging/build_macos.sh` (writes `release/`).
+
 ## Run
 
 ```bash

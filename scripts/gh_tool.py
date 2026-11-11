@@ -89,26 +89,48 @@ def create_release(repo: str, tag: str, name: str, notes: str):
 
 
 def upload_asset(repo: str, release: dict, path: Path):
+    """Upload the file bytes as-is.
+
+    GitHub's upload endpoint expects the raw body; a multipart envelope is stored
+    verbatim as the asset (the file grows by the boundary bytes and will not open).
+    """
     upload_url = release["upload_url"].split("{")[0]
     ctype = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
     url = "%s?name=%s" % (upload_url, urllib.parse.quote(path.name))
-    data = path.read_bytes()
-    boundary = uuid.uuid4().hex
-    body = b"".join([
-        b"--" + boundary.encode() + b"\r\n",
-        b'Content-Disposition: form-data; name="file"; filename="' + path.name.encode() + b'"\r\n',
-        b"Content-Type: " + ctype.encode() + b"\r\n\r\n",
-        data, b"\r\n--" + boundary.encode() + b"--\r\n",
-    ])
-    asset = api("POST", url, raw=body,
-                ctype="multipart/form-data; boundary=" + boundary)
+    asset = api("POST", url, raw=path.read_bytes(), ctype=ctype)
     print("uploaded %s (%d bytes) state=%s" % (asset["name"], asset["size"], asset["state"]))
     return asset
 
 
-if __name__ == "__main__":
-    import urllib.parse  # noqa: F401  (used inside upload_asset)
+def delete_asset(repo: str, asset_id: int):
+    api("DELETE", "/repos/%s/releases/assets/%d" % (repo, asset_id))
 
+
+def replace_assets(repo: str, tag: str, paths: list[Path]):
+    rel = api("GET", "/repos/%s/releases/tags/%s" % (repo, tag))
+    for a in rel.get("assets", []):
+        print("removing stale asset %s (%d bytes)" % (a["name"], a["size"]))
+        delete_asset(repo, a["id"])
+    rel = api("GET", "/repos/%s/releases/tags/%s" % (repo, tag))
+    for p in paths:
+        upload_asset(repo, rel, p)
+    rel = api("GET", "/repos/%s/releases/tags/%s" % (repo, tag))
+    for a in rel["assets"]:
+        print("  %s  %d bytes  %s" % (a["name"], a["size"], a["state"]))
+
+
+if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "whoami"
     if cmd == "whoami":
         whoami()
+    elif cmd == "create-repo":
+        create_repo(sys.argv[2], sys.argv[3])
+    elif cmd == "release":
+        repo, tag, name, notes_file = sys.argv[2:6]
+        rel = create_release(repo, tag, name, Path(notes_file).read_text())
+        for path in sys.argv[6:]:
+            upload_asset(repo, rel, Path(path))
+    elif cmd == "fix-assets":
+        replace_assets(sys.argv[2], sys.argv[3], [Path(p) for p in sys.argv[4:]])
+    else:
+        raise SystemExit("unknown command %r" % cmd)
